@@ -119,6 +119,11 @@ CONFIG_TEMPLATES+=fallback
 CONFIG_FILES+=skiplist
 CONFIG_FILES+=beerc
 
+BEE_TESTS+=test-beesep.sh
+BEE_TESTS+=test-beeversion.sh
+
+.PHONY: check ${BEE_TESTS}
+
 .SUFFIXES: .in .sh .sh.in
 
 all: build
@@ -267,3 +272,8 @@ install-config-templates: $(addprefix ${DESTDIR}${DEFCONFDIR}/bee/templates/,${C
 
 ${DESTDIR}${DEFCONFDIR}/bee/%: conf/% install-dir-config
 	$(call quiet-install,0444,$<,$@)
+
+check: build ${BEE_TESTS}
+
+${BEE_TESTS}:
+	$(call quiet-command,$(addprefix test/,$@),"CHECK	$@")
