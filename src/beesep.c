@@ -29,15 +29,13 @@
 #include <assert.h>
 #include <err.h>
 #include <regex.h>
+#include <unistd.h>
 
-#define bee_fprint(fh, str)  bee_fnprint(fh, 0, str)
+#define bee_fprint(fd, str)  bee_fnprint((fd), 0, (str))
 
-static int bee_fnprint(FILE *fh, size_t n, char *str)
+static int bee_fnprint(int fd, size_t n, char *str)
 {
     size_t m;
-
-    if (ferror(fh))
-        return 0;
 
     m =  strlen(str);
 
@@ -49,18 +47,17 @@ static int bee_fnprint(FILE *fh, size_t n, char *str)
     if (!n)
         return 1;
 
-    m = fwrite(str, sizeof(*str), n, fh);
+    m = write(fd, str, sizeof(*str) * n);
 
     if (m != n) {
-        assert(ferror(fh));
-        warn("fwrite");
+        warn("write");
         return 0;
     }
 
     return 1;
 }
 
-static void print_escaped(char *s, size_t n)
+static void print_escaped(int fd, char *s, size_t n)
 {
     char *c;
 
@@ -68,20 +65,20 @@ static void print_escaped(char *s, size_t n)
 
     c = s;
 
-    bee_fprint(stdout, "'");
+    bee_fprint(fd, "'");
 
     while ((c = strchr(s, '\'')) && c - s < n) {
         if (c-s)
-            bee_fnprint(stdout, c - s, s);
-        bee_fprint(stdout, "'\\''");
+            bee_fnprint(fd, c - s, s);
+        bee_fprint(fd, "'\\''");
         n -= c - s + 1;
         s  = c + 1;
     }
 
     if (n)
-        bee_fnprint(stdout, n, s);
+        bee_fnprint(fd, n, s);
 
-    bee_fprint(stdout, "'\n");
+    bee_fprint(fd, "'\n");
 }
 
 static int bee_regcomp(regex_t *preg, char *regex, int cflags)
@@ -99,7 +96,7 @@ static int bee_regcomp(regex_t *preg, char *regex, int cflags)
     return 0;
 }
 
-static short do_separation(char *str)
+static short do_separation(char *str, int fd)
 {
     int   res=0;
     int   r;
@@ -168,8 +165,8 @@ static short do_separation(char *str)
 
         /* print current key/value pair */
 
-        bee_fnprint(stdout, keylen+1, key);
-        print_escaped(value, vallen);
+        bee_fnprint(fd, keylen+1, key);
+        print_escaped(fd, value, vallen);
 
         /* reinit for next round */
 
@@ -182,12 +179,12 @@ static short do_separation(char *str)
 
     keylen = value-key-1;
 
-    bee_fnprint(stdout, keylen+1, key);
-    print_escaped(value, strlen(value));
+    bee_fnprint(fd, keylen+1, key);
+    print_escaped(fd, value, strlen(value));
 
     /* we are done -> set error-state and clean up */
 
-    res = !ferror(stdout);
+    res = 1;
 
 out:
     regfree(&regex_next);
@@ -200,12 +197,21 @@ out_first:
 
 int main(int argc, char *argv[])
 {
+    int fd;
+
     if (argc != 2) {
         warnx("argument missing\n");
         return 1;
     }
 
-    if (!do_separation(argv[1]))
+    fd = fileno(stdout);
+
+    if (fd == -1) {
+        warn("fileno");
+        return 1;
+    }
+
+    if (!do_separation(argv[1], fd))
         return 1;
 
     return 0;
