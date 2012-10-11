@@ -14,13 +14,8 @@ DATADIR    = ${PREFIX}/share
 MANDIR     = ${DATADIR}/man
 SYSCONFDIR = ${PREFIX}/etc
 
-# set sysconfdir /etc if prefix /usr
-ifeq (${PREFIX},/usr)
-    SYSCONFDIR = /etc
-endif
-
-# set sysconfdir /etc if prefix /usr/local
-ifeq (${PREFIX},/usr/local)
+# set sysconfdir /etc if prefix /usr or /usr/local
+ifeq (${PREFIX},$(filter /usr /usr/local, ${PREFIX}))
     SYSCONFDIR = /etc
 endif
 
