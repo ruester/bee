@@ -116,6 +116,13 @@ CONFIG_FILES+=skiplist
 CONFIG_FILES+=beerc
 
 .SUFFIXES: .in .sh .sh.in
+.PHONY: all build shellscripts cprograms manpages buildtypes \
+        clean install install-beeshlib install-bin install-buildtypes \
+        install-config install-config-defaults install-config-templates \
+        install-core install-dir-beeshlib install-dir-bindir \
+        install-dir-buildtypes install-dir-config install-dir-helper \
+        install-dir-hookdir install-dir-mandir install-dir-tools \
+        install-helper install-hooks install-man install-tools
 
 all: build
 
