@@ -70,6 +70,7 @@ HELPER_BEE_SHELL+=bee-list
 HELPER_BEE_SHELL+=bee-query
 HELPER_BEE_SHELL+=bee-remove
 HELPER_BEE_SHELL+=bee-update
+HELPER_BEE_SHELL+=bee-fetch
 
 HELPER_C+=bee-cache-inventory
 

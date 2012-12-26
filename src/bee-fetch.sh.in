@@ -1,0 +1,127 @@
+#!/bin/bash
+#
+# bee-fetch - fetch information about remote bee packages
+#
+# Copyright (C) 2009-2012
+#       Marius Tolzmann <tolzmann@molgen.mpg.de>
+#       Tobias Dreyer <dreyer@molgen.mpg.de>
+#       and other bee developers
+#
+# This file is part of bee.
+#
+# bee is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+
+if [ -z "${BEE_VERSION}" ] ; then
+    echo >&2 "BEE-ERROR: please call $0 from bee .."
+    exit 1
+fi
+
+if [ -z "${BEE_PKGDIR}" ] ; then
+    echo >&2 "BEE-ERROR: BEE_PKGDIR not set .."
+    exit 1
+fi
+
+if [ ! -f "${BEE_REMOTE_FILE}" ]; then
+    echo >&2 "BEE-ERROR: BEE_REMOTE_FILE not set .."
+    exit 1
+fi
+
+if ! type -p  wget 2>/dev/null 1>&2; then
+    echo >&2 "warning: wget is not installed"
+fi
+
+VERSION=${BEE_VERSION}
+
+: ${BEE_TMP_TMPDIR:=/tmp}
+
+function usage() {
+    cat <<-EOF
+	bee-fetch v${VERSION} 2009-2012
+	  by Marius Tolzmann and Tobias Dreyer <{tolzmann,dreyer}@molgen.mpg.de>
+	     Max Planck Institute for Molecular Genetics Berlin Dahlem
+
+	Usage: bee fetch
+
+	EOF
+}
+
+if [ ! -f "${BEE_REMOTE_FILE}" ]; then
+    echo >&2 "warning: ${BEE_REMOTE_FILE} does not exist; aborting"
+    exit 0
+fi
+
+if [ ! -d "${BEE_PKGDIR}" ]; then
+    mkdir -pv "${BEE_PKGDIR}"
+fi
+
+# remove all remote references
+for i in ${BEE_PKGDIR}/*.beeremote; do
+    if [ -f "$i" ]; then
+        rm -f "$i"
+    fi
+done
+
+# fetch all remote packages
+TMPFILE=${BEE_TMP_TMPDIR}/bee-fetch-$RANDOM-$$
+
+trap "rm -f ${TMPFILE}" EXIT
+
+while read url; do
+    url=$(echo ${url} | sed -e 's@[[:space:]]*$@@g;s@^[[:space:]]*@@g')
+
+    if [ ${url:0:1} = "#" ]; then
+        continue
+    fi
+
+    echo "fetching ${url}"
+
+    type=${url%%:*}
+    url=${url#file://}
+
+    case "$type" in
+        ftp|http|https)
+            wget -q -O ${TMPFILE} "${url}/pkglist"
+        ;;
+
+        *)
+            cp "${url}/pkglist" ${TMPFILE}
+        ;;
+    esac
+
+    while read package; do
+        # strip extension
+        package=${package%.bee.tar.bz2}
+
+        echo -n "${package}: "
+
+        if [ -f "${BEE_PKGDIR}/${package}.beeremote" ]; then
+            o=$(cat "${BEE_PKGDIR}/${package}.beeremote")
+            echo "reference already exists: ${o}"
+            continue
+        fi
+
+        if [ -f "${BEE_PKGDIR}/${package}.bee.tar.bz2" ]; then
+            echo "package already exists"
+            continue
+        fi
+
+        # add package reference
+        echo "${url}/${package}.bee.tar.bz2" \
+            > "${BEE_PKGDIR}/${package}.beeremote"
+
+        echo "reference added"
+    done < <(cat ${TMPFILE})
+done < <(cat ${BEE_REMOTE_FILE})

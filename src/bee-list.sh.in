@@ -154,7 +154,8 @@ function list_available_packages() {
     else
         find ${search} -mindepth 1 -maxdepth 1 -printf "%f\n" \
             | sed -e "s@\.iee\.tar\..*\$@@" \
-                  -e "s@\.bee\.tar\..*\$@@"
+                  -e "s@\.bee\.tar\..*\$@@" \
+                  -e "s@\.beeremote@@"
     fi
 }
 

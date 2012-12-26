@@ -323,6 +323,10 @@ function config_verify_builtin_prefixes() {
     : ${LOCALEDIR:='${DATAROOTDIR}/locale'}
 }
 
+function config_remote() {
+    : ${BEE_REMOTE_FILE:=${XDG_CONFIG_HOME}/bee/beeremote}
+}
+
 function expand_prefix_variables_defaults() {
     if [ "${SYSCONFDIR}" = "DEFAULT" ] ; then
         SYSCONFDIR="/etc"
@@ -362,6 +366,7 @@ function config_init() {
     config_verify_builtin_config
     config_verify_builtin_prefixes
     config_handle_deprecated_config
+    config_remote
 }
 
 function config_export() {
@@ -379,6 +384,8 @@ function config_export() {
     export BEE_SYSCONFDIR
     export BEE_DATADIR
     export BEE_LIBEXECDIR
+
+    export BEE_REMOTE_FILE
 
     export BEE_BEEDESTDIR
 
