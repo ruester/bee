@@ -1018,34 +1018,40 @@ bee_init_buildinsourcedir
 print_info "changing to build directory: ${B}"
 cd ${B}
 
-bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
-                               cmake \
-                               autotools \
-                               autogen \
-                               perl-module \
-                               perl-module-makemaker \
-                               python-module \
-                               make \
-                               jb \
-                               )
+if is_func "mee" ; then
+    log_enter "mee()"
+    mee
+    log_leave "mee()"
+else
+    bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
+                                   cmake \
+                                   autotools \
+                                   autogen \
+                                   perl-module \
+                                   perl-module-makemaker \
+                                   python-module \
+                                   make \
+                                   jb \
+                                   )
 
-BEE_BUILDTYPE_DETECTED=""
+    BEE_BUILDTYPE_DETECTED=""
 
-for t in ${bee_buildmagic[@]} ; do
-    load_buildmagic ${t}
-    if [ -n "${BEE_BUILDTYPE_DETECTED}" ] ; then
-        break
+    for t in ${bee_buildmagic[@]} ; do
+        load_buildmagic ${t}
+        if [ -n "${BEE_BUILDTYPE_DETECTED}" ] ; then
+            break
+        fi
+    done
+
+    bee_run configure
+    bee_run build
+
+    if [ "${OPT_CHECK}" != "no" ] ; then
+        bee_run check
     fi
-done
 
-bee_run configure
-bee_run build
-
-if [ "${OPT_CHECK}" != "no" ] ; then
-    bee_run check
+    bee_run install
 fi
-
-bee_run install
 
 print_info "changing to image directory: ${D}"
 cd ${D}
