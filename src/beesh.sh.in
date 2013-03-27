@@ -1013,6 +1013,11 @@ cd ${S}
 
 bee_run patch ${bee_PATCHFILES[@]}
 
+bee_init_buildinsourcedir
+
+print_info "changing to build directory: ${B}"
+cd ${B}
+
 bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
                                cmake \
                                autotools \
@@ -1032,11 +1037,6 @@ for t in ${bee_buildmagic[@]} ; do
         break
     fi
 done
-
-bee_init_buildinsourcedir
-
-print_info "changing to build directory: ${B}"
-cd ${B}
 
 bee_run configure
 bee_run build
