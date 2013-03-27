@@ -1018,40 +1018,48 @@ cd ${S}
 
 bee_run patch ${bee_PATCHFILES[@]}
 
-bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
-                               cmake \
-                               autotools \
-                               autogen \
-                               perl-module \
-                               perl-module-makemaker \
-                               python-module \
-                               make \
-                               jb \
-                               haskell-module \
-                               )
+if is_func "mee" ; then
+    bee_init_buildinsourcedir
 
-BEE_BUILDTYPE_DETECTED=""
+    log_enter "mee()"
+    mee
+    log_leave "mee()"
+else
+    bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
+                                   cmake \
+                                   autotools \
+                                   autogen \
+                                   perl-module \
+                                   perl-module-makemaker \
+                                   python-module \
+                                   make \
+                                   jb \
+                                   haskell-module \
+                                   )
 
-for t in ${bee_buildmagic[@]} ; do
-    load_buildmagic ${t}
-    if [ -n "${BEE_BUILDTYPE_DETECTED}" ] ; then
-        break
+    BEE_BUILDTYPE_DETECTED=""
+
+    for t in ${bee_buildmagic[@]} ; do
+        load_buildmagic ${t}
+        if [ -n "${BEE_BUILDTYPE_DETECTED}" ] ; then
+            break
+        fi
+    done
+
+    bee_init_buildinsourcedir
+
+    print_info "changing to build directory: ${B}"
+    cd ${B}
+
+    bee_run configure
+    bee_run build
+
+    if [ "${OPT_CHECK}" != "no" ] ; then
+        bee_run check
     fi
-done
 
-bee_init_buildinsourcedir
-
-print_info "changing to build directory: ${B}"
-cd ${B}
-
-bee_run configure
-bee_run build
-
-if [ "${OPT_CHECK}" != "no" ] ; then
-    bee_run check
+    bee_run install
 fi
-
-bee_run install
 
 print_info "changing to image directory: ${D}"
 cd ${D}
