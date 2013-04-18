@@ -248,6 +248,7 @@ function fetch_one_file() {
     local url="${1}"
     local file="${2}"
     local guessed_filename="${url##*/}"
+    local nocheck=""
 
     guessed_filename=${guessed_filename%%\?*}
     guessed_filename=${guessed_filename%%#*}
@@ -265,8 +266,6 @@ function fetch_one_file() {
     else
         if [ "${url:0:5}" == "https" ] ; then
             nocheck="--no-check-certificate"
-        else
-            nocheck=""
         fi
 
         if [ ! -s "${F}/${file}" ] ; then
