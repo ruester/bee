@@ -269,7 +269,7 @@ function fetch_one_file() {
         fi
 
         if [ ! -s "${F}/${file}" ] ; then
-            rm -vf ${F}/${file}
+            rm -vf "${F}/${file}"
         fi
 
         trap "rm -f ${F}/${file}" EXIT
