@@ -281,6 +281,12 @@ function fetch_one_file() {
             --no-clobber \
             "${url}" || true
 
+        if [ ! -s "${F}/${file}" ]; then
+            print_error "fetching ${file} failed"
+            rm -f "${F}/${file}"
+            exit 1
+        fi
+
         trap - EXIT
 
         ls -ld "${F}/${file}"
