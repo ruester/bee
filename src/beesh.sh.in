@@ -249,6 +249,7 @@ function fetch_one_file() {
     local file="${2}"
     local guessed_filename="${url##*/}"
     local nocheck=""
+    local fail=0
 
     guessed_filename=${guessed_filename%%\?*}
     guessed_filename=${guessed_filename%%#*}
@@ -279,9 +280,15 @@ function fetch_one_file() {
             ${nocheck} \
             --output-document="${F}/${file}" \
             --no-clobber \
-            "${url}" || true
+            "${url}" || fail=$?
 
         trap - EXIT
+
+        if [ ! -s "${F}/${file}" -a ${fail} != 0 ]; then
+            print_error "fetching ${file} failed"
+            rm -f "${F}/${file}"
+            exit 1
+        fi
 
         ls -ld "${F}/${file}"
     fi
