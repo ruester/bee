@@ -1023,6 +1023,7 @@ bee_buildmagic=$(${BEE_BINDIR}/beeuniq ${BEE_BUILDTYPE[@]} \
                                make \
                                jb \
                                haskell-module \
+                               r-package \
                                )
 
 BEE_BUILDTYPE_DETECTED=""
