@@ -30,46 +30,67 @@ BEE_BUILDTYPE_DETECTED="haskell-module"
 
 : ${GHC:=ghc}
 
+if [ $UID -eq 0 ]; then
+    installation="--global"
+else
+    installation="--user"
+fi
+
 build_in_sourcedir
 
 #### bee_configure() ##########################################################
 
 bee_configure() {
-    if [ ! -x Setup ]; then
+    if [ ! -x ${S}/Setup ]; then
         # compile Setup with ghc
-        if [ -r Setup.hs ]; then
-            ${GHC} Setup.hs -o Setup
+        if [ -r ${S}/Setup.hs ]; then
+            start_cmd ${GHC} ${S}/Setup.hs -o ${S}/Setup
         else
             # instead of a Setup.hs file there is
             # sometimes a 'literate haskell' file Setup.lhs
-            ${GHC} Setup.lhs -o Setup
+            start_cmd ${GHC} ${S}/Setup.lhs -o ${S}/Setup
         fi
     fi
 
-    start_cmd ./Setup \
-        configure \
-        --prefix="${PREFIX}" \
-        --bindir="${BINDIR}" \
-        --libdir="${LIBDIR}" \
-        --libexecdir="${LIBEXECDIR}" \
-        --datadir="${DATADIR}" \
-        --docdir="${DOCDIR}" \
-        "${@}"
+    start_cmd ${S}/Setup \
+            configure \
+            --prefix="${PREFIX}" \
+            --with-ghc="${GHC}" \
+            "${installation}" \
+            "${@}"
 }
 
 #### bee_build() ##############################################################
 
 bee_build() {
-    start_cmd ./Setup \
+    start_cmd ${S}/Setup \
         build \
+        "${@}"
+
+    # build documentation
+    start_cmd ${S}/Setup \
+        haddock \
         "${@}"
 }
 
 #### bee_install() ############################################################
 
 bee_install() {
-    start_cmd ./Setup \
+    start_cmd ${S}/Setup \
         copy \
         --destdir="${D}" \
         "${@}"
+
+    # generate (un)register scripts for ghc-pkg
+    start_cmd ${S}/Setup \
+        register \
+        --gen-script
+
+    start_cmd ${S}/Setup \
+        unregister \
+        --gen-script
+
+    mkdir -pv ${D}${DATAROOTDIR}/${PKGFULLNAME}-${PKGVERSION}
+    cp register.sh ${D}${DATAROOTDIR}/${PKGFULLNAME}-${PKGVERSION}/bee-register-haskell-module.sh
+    cp unregister.sh ${D}${DATAROOTDIR}/${PKGFULLNAME}-${PKGVERSION}/bee-unregister-haskell-module.sh
 }
