@@ -861,7 +861,7 @@ eval set -- "${OPTIONS}"
 : ${OPT_INSTALL:="no"}
 : ${OPT_CLEANUP:="no"}
 : ${OPT_CHECK:="no"}
-: ${OPT_ARCHIVE_BUILD:="yes"}
+: ${OPT_ARCHIVE_BUILD:="no"}
 
 while true ; do
     case "$1" in
