@@ -75,7 +75,7 @@ while read line ; do
 
    echo -n "type=${type}"
    printf  ":mode=0%o"   ${mode} 
-   printf  ":access=0%o" $(( ${mode} & 07777 ))
+   printf  ":access=0%o" $(( mode & 07777 ))
    echo -n ":nlink=${nlink}:uid=${uid}:gid=${gid}:size=${size}:mtime=${mtime}"
    if [ -n "${md5}" ] ; then
       echo -n ":md5=${md5}"
