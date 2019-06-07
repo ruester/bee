@@ -1,0 +1,49 @@
+language: c
+
+env:
+  global:
+    - TEMP_PREFIX=~/.local/prefix
+    - TEST_TAR_URL=http://www.bennewitz.com/bluefish/stable/source/bluefish-2.2.2.tar.bz2
+
+os:
+  - linux
+
+addons:
+  apt:
+    update: true
+    packages:
+    - build-essential
+    - xmlto
+    - intltool
+    - libgtk-3-dev
+    - libxml2-dev
+
+matrix:
+  include:
+    - name: "Xenial"
+      dist: xenial
+    - name: "Trusty"
+      dist: trusty
+
+script:
+  - sudo make clean install
+  - cd manpages
+  - make xml2man
+  - which bee
+  - bee --help
+  - bee --version
+  - cd "$(mktemp -d)"
+  - mkdir -pv $TEMP_PREFIX
+  - bee init --prefix=$TEMP_PREFIX $TEST_TAR_URL
+  - ./bluefish-2.2.2-0.bee
+  - bee install bluefish
+  - ls $TEMP_PREFIX
+  - "if [ -d $TEMP_PREFIX ]; then true; else false; fi"
+  - bee list
+  - "if [ \"$(bee list | wc -l)\" == \"1\" ]; then true; else false; fi"
+  - bee query bin/bluefish
+  - "if [ \"$(bee query bin/bluefish | head -1)\" == \"bluefish-2.2.2-0.x86_64\" ]; then true; else false; fi"
+  - bee remove bluefish-2.2.2-0.x86_64
+  - bee list
+  - "if [ \"$(bee list | wc -l)\" == \"0\" ]; then true; else false; fi"
+  - "if [ ! -d $TEMP_PREFIX ]; then true; else false; fi"
